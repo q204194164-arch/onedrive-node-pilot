@@ -60,10 +60,12 @@ enum CloudBoltIcon {
         let shutdownEngine = engine
         observers.append(NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: nil) { _ in shutdownEngine.stopHelper() })
         observers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.cancel(); self?.timer?.invalidate(); self?.nextDate = nil }
+            guard let owner = self else { return }
+            Task { @MainActor in owner.cancel(); owner.timer?.invalidate(); owner.nextDate = nil }
         })
         observers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.reschedule() }
+            guard let owner = self else { return }
+            Task { @MainActor in owner.reschedule() }
         })
         reschedule()
         if automatic { Task { try? await Task.sleep(nanoseconds: 2_000_000_000); await scan() } }
@@ -73,7 +75,8 @@ enum CloudBoltIcon {
         guard automatic, !running else { return }
         nextDate = Date().addingTimeInterval(Double(minutes) * 60)
         timer = Timer.scheduledTimer(withTimeInterval: Double(minutes) * 60, repeats: false) { [weak self] _ in
-            Task { @MainActor in await self?.scan() }
+            guard let owner = self else { return }
+            Task { @MainActor in await owner.scan() }
         }
         timer?.tolerance = 30
     }

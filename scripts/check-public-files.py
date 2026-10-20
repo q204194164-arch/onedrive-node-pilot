@@ -9,6 +9,7 @@ allowed = {
     ".gitignore", "README.md", "LICENSE", "PRIVACY.md", "CONTRIBUTING.md", "SECURITY.md", "build.sh",
     "Sources/App.swift", "Sources/Engine.swift", "Sources/LaunchWatcher.swift",
     "Tests/EngineTests.swift", "Tests/ProbeCLI.swift", "Tests/IsolationCLI.swift",
+    "docs/images/app.png",
     "scripts/test.sh", "scripts/check-public-files.py", ".github/workflows/ci.yml",
 }
 files = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\0")
@@ -25,6 +26,10 @@ for name in filter(None, files):
     if name not in allowed:
         failures.append(f"{name}: outside public allowlist")
         continue
+    if name == "docs/images/app.png":
+        if not (root / name).read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
+            failures.append(f"{name}: expected PNG screenshot")
+        continue  # Screenshot content must also be reviewed visually before publication.
     content = (root / name).read_text(encoding="utf-8")
     for label, pattern in patterns.items():
         if pattern.search(content):

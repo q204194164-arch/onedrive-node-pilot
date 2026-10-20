@@ -26,3 +26,8 @@
 !/.github/workflows/
 /.github/workflows/*
 !/.github/workflows/ci.yml
+!/docs/
+/docs/*
+!/docs/images/
+/docs/images/*
+!/docs/images/app.png
